@@ -18,6 +18,24 @@ Description: AB3 Ashwin Kannoth
 
 Parameters:
 
+  pAuroraUser: #username for Aurora access
+    AllowedPattern: '.*'
+    Default: admin
+    Description: Aurora master username
+    MaxLength: '41'
+    MinLength: '2'
+    NoEcho: 'false'
+    Type: String
+
+  pAuroraPW: #password for Aurora access
+    AllowedPattern: '[a-zA-Z0-9]*'
+    Default: password
+    Description: Aurora master password
+    MaxLength: '41'
+    MinLength: '8'
+    NoEcho: 'true'
+    Type: String
+
   pAMIID: #AMI ID for web server
     AllowedPattern: '.*'
     Default: ami-0b7de35cf47b997ae
@@ -565,6 +583,29 @@ Resources:
               CidrIp: "0.0.0.0/0"
               IpProtocol: "-1"
 
+  rSGPrivateDB: #SG for DB resources
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG to allow communication between private resources
+      GroupName: SGPrivateDB
+      SecurityGroupEgress:
+        -
+          CidrIp: 0.0.0.0/0
+          IpProtocol: '-1'
+      SecurityGroupIngress:
+        -
+          Description: Allow EC2 access to Aurora
+          FromPort: 3306
+          IpProtocol: tcp
+          SourceSecurityGroupId: !Ref rSGPrivateEC2
+          SourceSecurityGroupOwnerId: !Ref AWS::AccountId
+          ToPort: 3306
+      Tags:
+        -
+          Key: Name
+          Value: SGPrivateDB
+      VpcId: !Ref rVPC
+
 
 
 
@@ -831,3 +872,106 @@ Resources:
       SecurityGroups:
         - !Ref rSGforEFS
       SubnetId: !Ref rPrivateSubnetB
+
+############################################################################################
+# AURORA DATABASE
+############################################################################################
+
+  rAuroraSubnetGroup: #make subnet group for Aurora
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Aurora subnet group
+      DBSubnetGroupName: aurora-subnet-group
+      SubnetIds:
+        - !Ref rPrivateSubnetA
+        - !Ref rPrivateSubnetB
+      Tags:
+        -
+          Key: Name
+          Value: AuroraSubnetGroup
+
+  rAuroraCluster: #Aurora cluster
+      Type: AWS::RDS::DBCluster
+      Properties:
+        AvailabilityZones:
+          - !Sub ${AWS::Region}a
+          - !Sub ${AWS::Region}b
+        BackupRetentionPeriod: 1
+        DBClusterIdentifier: AuroraDB
+        DBClusterParameterGroupName: default.aurora-mysql5.7
+        DBSubnetGroupName: !Ref rAuroraSubnetGroup
+        DatabaseName: AuroraCluster
+        DeletionProtection: false
+        EnableHttpEndpoint: false
+        EnableIAMDatabaseAuthentication: false
+        Engine: aurora-mysql
+        EngineMode: provisioned
+        EngineVersion: 5.7.mysql_aurora.2.07.2
+        #KmsKeyId: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${pKMSAurora}
+        MasterUserPassword: !Ref pAuroraPW
+        MasterUsername: !Ref pAuroraUser
+        Port: 3306
+        PreferredBackupWindow: 05:55-06:25
+        PreferredMaintenanceWindow: thu:07:23-thu:07:53
+        StorageEncrypted: true
+        Tags:
+          -
+            Key: backup
+            Value: 'true'
+          -
+            Key: Name
+            Value: AuroraCluster
+        VpcSecurityGroupIds:
+          - !Ref rSGPrivateDB
+
+  rAuroraInstanceA: #Aurora instance 1
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AutoMinorVersionUpgrade: true
+      AvailabilityZone: !Sub ${AWS::Region}a
+      CACertificateIdentifier: rds-ca-2019
+      DBClusterIdentifier: !Ref rAuroraCluster
+      DBInstanceClass: db.t3.small
+      DBInstanceIdentifier: AuroraInstanceA
+      DBSubnetGroupName: !Ref rAuroraSubnetGroup
+      EnablePerformanceInsights: false
+      Engine: aurora-mysql
+      EngineVersion: 5.7.mysql_aurora.2.07.2
+      LicenseModel: general-public-license
+      #MonitoringInterval: 60
+      #MonitoringRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/rds-monitoring-role
+      PromotionTier: 1
+      PubliclyAccessible: false
+      Tags:
+        -
+          Key: backup
+          Value: 'true'
+        -
+          Key: Name
+          Value: AuroraInstanceA
+
+  rAuroraInstanceB: #Aurora instance 2
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AutoMinorVersionUpgrade: true
+      AvailabilityZone: !Sub ${AWS::Region}b
+      CACertificateIdentifier: rds-ca-2019
+      DBClusterIdentifier: !Ref rAuroraCluster
+      DBInstanceClass: db.t3.small
+      DBInstanceIdentifier: AuroraInstanceB
+      DBSubnetGroupName: !Ref rAuroraSubnetGroup
+      EnablePerformanceInsights: false
+      Engine: aurora-mysql
+      EngineVersion: 5.7.mysql_aurora.2.07.2
+      LicenseModel: general-public-license
+      #MonitoringInterval: 60
+      #MonitoringRoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/rds-monitoring-role
+      PromotionTier: 1
+      PubliclyAccessible: false
+      Tags:
+        -
+          Key: backup
+          Value: 'true'
+        -
+          Key: Name
+          Value: AuroraInstanceB
