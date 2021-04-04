@@ -1399,4 +1399,7 @@ Resources:
 # S3 BUCKETS
 ############################################################################################
 
- 
+  rS3BucketCodePipeline: #bucket for codepipeline to store files
+    Type: "AWS::S3::Bucket"
+    Properties:
+        BucketName: kannotha-codepipeline
