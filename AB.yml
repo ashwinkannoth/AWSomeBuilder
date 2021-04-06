@@ -11,7 +11,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: AB3 Ashwin Kannoth
 
-
 ############################################################################################
 # PARAMETERS
 ############################################################################################
@@ -42,6 +41,25 @@ Parameters:
     Description: AMI ID for the web server
     NoEcho: 'false'
     Type: AWS::EC2::Image::Id
+
+  pBucketNameLogs: #bucket name for S3 log bucket
+    AllowedPattern: '.*'
+    Default: kannotha-logs
+    Description: Bucket name for AB3 log bucket. Must be universally unique.
+    MaxLength: '100'
+    MinLength: '1'
+    NoEcho: 'false'
+    Type: String
+
+  pBucketNameFirehose: #bucket name for S3 firehose bucket
+    AllowedPattern: '.*'
+    Default: kannotha-firehose-logs
+    Description: Bucket name for Firehose stream destination. Must be universally unique.
+    MaxLength: '100'
+    MinLength: '1'
+    NoEcho: 'false'
+    Type: String
+
 
   pInstanceType: #Instance type for EC2
     AllowedPattern: '.*'
@@ -95,14 +113,14 @@ Parameters:
     NoEcho: 'false'
     Type: String
 
-  pCertificateALB: #certificate ARN for ALB
-    AllowedPattern: '.*'
-    Default: 4b3d8cbb-5424-41bf-b173-9f9512455422
-    Description: Certificate ARN for ALB
-    MaxLength: '100'
-    MinLength: '1'
-    NoEcho: 'false'
-    Type: String
+  # pCertificateALB: #certificate ARN for ALB
+  #   AllowedPattern: '.*'
+  #   Default: 4b3d8cbb-5424-41bf-b173-9f9512455422
+  #   Description: Certificate ARN for ALB
+  #   MaxLength: '100'
+  #   MinLength: '1'
+  #   NoEcho: 'false'
+  #   Type: String
 
   pNetworkIn: #network in value (bytes) before autoscaling
     AllowedPattern: '.*'
@@ -216,6 +234,23 @@ Resources:
           PrivateDnsEnabled: true
           SecurityGroupIds: 
             - !Ref rSGVPCEndpoint
+
+  rVPCFlowLog:
+      Type: "AWS::EC2::FlowLog"
+      DependsOn: rBucketPolicy
+      Properties:
+          ResourceId: !Ref rVPC
+          TrafficType: "ALL"
+          LogDestinationType: s3
+          LogDestination: !Sub arn:aws:s3:::${rS3Logs}
+          DeliverLogsPermissionArn: !GetAtt rIAMFlowLogsRole.Arn
+          ResourceType: VPC
+          LogFormat: "${version} ${account-id} ${interface-id} ${srcaddr} ${dstaddr} ${srcport} ${dstport} ${protocol} ${packets} ${bytes} ${start} ${end} ${action} ${log-status}"
+          MaxAggregationInterval: 60
+          Tags: 
+            - 
+              Key: "Name"
+              Value: "MyVPC-Flowlog"
 
 ############################################################################################
 # SUBNET RESORUCES
@@ -422,6 +457,7 @@ Resources:
         - 
           Key: Name
           Value: EIPB
+
 ############################################################################################
 # IAM ROLES
 ############################################################################################
@@ -460,6 +496,14 @@ Resources:
     Properties:
       Roles:
       - !Ref rIAMRoleForEC2
+
+  rIAMFlowLogsRole:
+      Type: "AWS::IAM::Role"
+      Properties:
+          Path: "/"
+          RoleName: "flowlogsRole"
+          AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"vpc-flow-logs.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+          MaxSessionDuration: 3600
 
 
 
@@ -1400,6 +1444,65 @@ Resources:
 ############################################################################################
 
   rS3BucketCodePipeline: #bucket for codepipeline to store files
-    Type: "AWS::S3::Bucket"
-    Properties:
-        BucketName: kannotha-codepipeline
+      Type: "AWS::S3::Bucket"
+      Properties:
+          BucketName: kannotha-codepipeline
+          BucketEncryption: 
+              ServerSideEncryptionConfiguration: 
+                - 
+                  ServerSideEncryptionByDefault: 
+                      SSEAlgorithm: "AES256"
+                  BucketKeyEnabled: false
+
+  rS3Logs:
+      Type: "AWS::S3::Bucket"
+      Properties:
+          BucketName: !Ref pBucketNameLogs
+          BucketEncryption: 
+              ServerSideEncryptionConfiguration: 
+                - 
+                  ServerSideEncryptionByDefault: 
+                      SSEAlgorithm: "AES256"
+                  BucketKeyEnabled: false
+
+  rS3Firehose:
+      Type: "AWS::S3::Bucket"
+      Properties:
+          BucketName: !Ref pBucketNameFirehose
+          BucketEncryption: 
+              ServerSideEncryptionConfiguration: 
+                - 
+                  ServerSideEncryptionByDefault: 
+                      SSEAlgorithm: "AES256"
+                  BucketKeyEnabled: false
+
+  rBucketPolicy:
+      Type: "AWS::S3::BucketPolicy"
+      Properties:
+          Bucket: !Ref rS3Logs
+          PolicyDocument: 
+              Version: "2012-10-17"
+              Id: "AWSLogDeliveryWrite20150319"
+              Statement: 
+                - 
+                  Sid: "AWSLogDeliveryWrite"
+                  Effect: "Allow"
+                  Principal: 
+                      Service: "delivery.logs.amazonaws.com"
+                  Action: "s3:PutObject"
+                  Resource: !Sub "arn:aws:s3:::${rS3Logs}/AWSLogs/${AWS::AccountId}/*"
+                  Condition: 
+                      StringEquals: 
+                          "s3:x-amz-acl": "bucket-owner-full-control"
+                - 
+                  Sid: "AWSLogDeliveryAclCheck"
+                  Effect: "Allow"
+                  Principal: 
+                      Service: "delivery.logs.amazonaws.com"
+                  Action: "s3:GetBucketAcl"
+                  Resource: !Sub "arn:aws:s3:::${rS3Logs}"
+
+############################################################################################
+# FIREHOSE
+############################################################################################
+
