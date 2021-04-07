@@ -505,8 +505,6 @@ Resources:
           AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"vpc-flow-logs.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
           MaxSessionDuration: 3600
 
-
-
 ############################################################################################
 # SECURITY GROUPS
 ############################################################################################
@@ -1506,3 +1504,143 @@ Resources:
 # FIREHOSE
 ############################################################################################
 
+  rKinesisFirehoseDeliveryStream:
+          Type: "AWS::KinesisFirehose::DeliveryStream"
+          Properties:
+              DeliveryStreamName: "KinesisDemo"
+              DeliveryStreamType: "DirectPut"
+              #DeliveryStreamEncryptionConfigurationInput: {}
+              S3DestinationConfiguration: 
+                  BucketARN: !Sub arn:aws:s3:::${rS3Firehose}
+                  BufferingHints: 
+                      SizeInMBs: 1
+                      IntervalInSeconds: 60
+                  CloudWatchLoggingOptions: 
+                      Enabled: true
+                      LogGroupName: "/aws/kinesisfirehose/KinesisDemo"
+                      LogStreamName: "S3Delivery"
+                  CompressionFormat: "UNCOMPRESSED"
+                  EncryptionConfiguration: 
+                      NoEncryptionConfig: "NoEncryption"
+                  #Prefix: ""
+                  RoleARN: !GetAtt  rIAMKinesis.Arn
+
+
+  rIAMManagedPolicyKinesis:
+      Type: "AWS::IAM::ManagedPolicy"
+      Properties:
+          ManagedPolicyName: !Sub "KinesisFirehoseServicePolicy-KinesisDemo-${AWS::Region}"
+          Path: "/service-role/"
+          PolicyDocument: !Sub |
+              {
+                  "Version": "2012-10-17",
+                  "Statement": [
+                      {
+                          "Sid": "",
+                          "Effect": "Allow",
+                          "Action": [
+                              "glue:GetTable",
+                              "glue:GetTableVersion",
+                              "glue:GetTableVersions"
+                          ],
+                          "Resource": [
+                              "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog",
+                              "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%",
+                              "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                          ]
+                      },
+                      {
+                          "Sid": "",
+                          "Effect": "Allow",
+                          "Action": [
+                              "s3:AbortMultipartUpload",
+                              "s3:GetBucketLocation",
+                              "s3:GetObject",
+                              "s3:ListBucket",
+                              "s3:ListBucketMultipartUploads",
+                              "s3:PutObject"
+                          ],
+                          "Resource": [
+                              "arn:aws:s3:::kannotha-firehose-logs",
+                              "arn:aws:s3:::kannotha-firehose-logs/*"
+                          ]
+                      },
+                      {
+                          "Sid": "",
+                          "Effect": "Allow",
+                          "Action": [
+                              "lambda:InvokeFunction",
+                              "lambda:GetFunctionConfiguration"
+                          ],
+                          "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "kms:GenerateDataKey",
+                              "kms:Decrypt"
+                          ],
+                          "Resource": [
+                              "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                          ],
+                          "Condition": {
+                              "StringEquals": {
+                                  "kms:ViaService": "s3.${AWS::Region}.amazonaws.com"
+                              },
+                              "StringLike": {
+                                  "kms:EncryptionContext:aws:s3:arn": [
+                                      "arn:aws:s3:::%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%/*"
+                                  ]
+                              }
+                          }
+                      },
+                      {
+                          "Sid": "",
+                          "Effect": "Allow",
+                          "Action": [
+                              "logs:PutLogEvents"
+                          ],
+                          "Resource": [
+                              "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/kinesisfirehose/KinesisDemo:log-stream:*"
+                          ]
+                      },
+                      {
+                          "Sid": "",
+                          "Effect": "Allow",
+                          "Action": [
+                              "kinesis:DescribeStream",
+                              "kinesis:GetShardIterator",
+                              "kinesis:GetRecords",
+                              "kinesis:ListShards"
+                          ],
+                          "Resource": "arn:aws:kinesis:${AWS::Region}:${AWS::AccountId}:stream/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": [
+                              "kms:Decrypt"
+                          ],
+                          "Resource": [
+                              "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                          ],
+                          "Condition": {
+                              "StringEquals": {
+                                  "kms:ViaService": "kinesis.${AWS::Region}.amazonaws.com"
+                              },
+                              "StringLike": {
+                                  "kms:EncryptionContext:aws:kinesis:arn": "arn:aws:kinesis:ca-central-1:${AWS::AccountId}:stream/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                              }
+                          }
+                      }
+                  ]
+              }
+
+  rIAMKinesis:
+      Type: "AWS::IAM::Role"
+      Properties:
+          Path: "/service-role/"
+          #RoleName: !Sub "KinesisFirehoseServiceRole-KinesisDem-${AWS::Region}-1616682360239"
+          AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"firehose.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+          MaxSessionDuration: 3600
+          ManagedPolicyArns: 
+            - !Ref rIAMManagedPolicyKinesis
