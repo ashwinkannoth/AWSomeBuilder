@@ -1,7 +1,6 @@
 ############################################################################################
 # Ashwin Kannoth @kannotha
 # AB3 CloudFormation Template
-# DATE HERE
 ############################################################################################
 
 ############################################################################################
@@ -44,7 +43,7 @@ Parameters:
 
   pBucketNameVPCLogs: #bucket name for S3 log bucket
     AllowedPattern: '.*'
-    Default: kannotha-logs
+    Default: kannothalogs
     Description: Bucket name for AB3 log bucket. Must be universally unique.
     MaxLength: '100'
     MinLength: '1'
@@ -53,7 +52,7 @@ Parameters:
 
   pBucketNameCloudTrailLogs: #bucket name for S3 log bucket
     AllowedPattern: '.*'
-    Default: kannotha-logs-cloudtrail
+    Default: kannothalogscloudtrail
     Description: Bucket name for AB3 log bucket. Must be universally unique.
     MaxLength: '100'
     MinLength: '1'
@@ -62,7 +61,7 @@ Parameters:
 
   pBucketNameFirehose: #bucket name for S3 firehose bucket
     AllowedPattern: '.*'
-    Default: kannotha-firehose-logs
+    Default: kannothafirehoselogs
     Description: Bucket name for Firehose stream destination. Must be universally unique.
     MaxLength: '100'
     MinLength: '1'
@@ -122,23 +121,23 @@ Parameters:
     NoEcho: 'false'
     Type: String
 
-  # pCertificateALB: #certificate ARN for ALB
-  #   AllowedPattern: '.*'
-  #   Default: d8f4f7a6-0b17-4909-b634-a8bf9a4883e9
-  #   Description: Certificate ARN for ALB
-  #   MaxLength: '100'
-  #   MinLength: '1'
-  #   NoEcho: 'false'
-  #   Type: String
+  pCertificateALB: #certificate ARN for ALB
+    AllowedPattern: '.*'
+    Default: 47faa4d5-1fe5-4910-b029-7efceec79f24 
+    Description: Certificate ARN for ALB
+    MaxLength: '100'
+    MinLength: '1'
+    NoEcho: 'false'
+    Type: String
 
-  # pCertificateCloudfront: #certificate ARN for CloudFront
-  #   AllowedPattern: '.*'
-  #   Default: d8f4f7a6-0b17-4909-b634-a8bf9a4883e9
-  #   Description: Certificate ARN for CloudFront
-  #   MaxLength: '100'
-  #   MinLength: '1'
-  #   NoEcho: 'false'
-  #   Type: String
+  pCertificateCloudfront: #certificate ARN for CloudFront
+    AllowedPattern: '.*'
+    Default: d8f4f7a6-0b17-4909-b634-a8bf9a4883e9
+    Description: Certificate ARN for CloudFront
+    MaxLength: '100'
+    MinLength: '1'
+    NoEcho: 'false'
+    Type: String
 
   pNetworkIn: #network in value (bytes) before autoscaling
     AllowedPattern: '.*'
@@ -148,14 +147,6 @@ Parameters:
     MinLength: '1'
     NoEcho: 'false'
     Type: String
-
-
-  #pSSHKeyPair: #SSH Key pair name
-  #  AllowedPattern: '.*'
-   # Default: ssh_test_kp
-    #Description: SSH key pair name for access to web servers
-    #NoEcho: 'false'
-    #Type: AWS::EC2::KeyPair::KeyName
 
   pDomainNameCloudFront: #DNS name for cloudfront
     AllowedPattern: '.*'
@@ -546,7 +537,6 @@ Resources:
       Type: "AWS::IAM::Role"
       Properties:
           Path: "/service-role/"
-          #RoleName: !Sub "KinesisFirehoseServiceRole-KinesisDem-${AWS::Region}-1616682360239"
           AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"firehose.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
           MaxSessionDuration: 3600
           ManagedPolicyArns: 
@@ -696,9 +686,6 @@ Resources:
       VpcId: !Ref rVPC
 
 
-
-
-
 ############################################################################################
 # Load Balancer
 ############################################################################################
@@ -750,7 +737,7 @@ Resources:
     Properties:
         Certificates:
           -
-            CertificateArn: arn:aws:acm:ca-central-1:696811459309:certificate/47faa4d5-1fe5-4910-b029-7efceec79f24
+            CertificateArn: !Sub arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${pCertificateALB}
         DefaultActions:
           -
             Order: 1
@@ -827,9 +814,9 @@ Resources:
     DependsOn:
       - rEFSMountTargetA
       - rEFSMountTargetB
-      #- rAuroraCluster
-      #- rAuroraInstanceA
-      #- rAuroraInstanceB
+      - rAuroraCluster
+      - rAuroraInstanceA
+      - rAuroraInstanceB
     Properties:
       LaunchConfigurationName: LaunchConfiguration
       EbsOptimized: false
@@ -945,7 +932,6 @@ Resources:
         -
           Key: Name
           Value: EFS
-      #KmsKeyId: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${pKMSEFS}
       PerformanceMode: generalPurpose
       ThroughputMode: bursting
       
@@ -1000,7 +986,6 @@ Resources:
         Engine: aurora-mysql
         EngineMode: provisioned
         EngineVersion: 5.7.mysql_aurora.2.07.2
-        #KmsKeyId: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/${pKMSAurora}
         MasterUserPassword: !Ref pAuroraPW
         MasterUsername: !Ref pAuroraUser
         Port: 3306
@@ -1600,7 +1585,6 @@ Resources:
                       Bool: 
                           "aws:SecureTransport": "false"
 
-
 ############################################################################################
 # FIREHOSE
 ############################################################################################
@@ -1773,8 +1757,6 @@ Resources:
                   Compress: true
                   CachePolicyId: "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
                   OriginRequestPolicyId: "216adef6-5c7f-47e4-b989-5492eafa07d3"
-                  # ForwardedValues: 
-                  #     Cookies: {}
                   SmoothStreaming: false
                   TargetOriginId: !Ref rALB
                   ViewerProtocolPolicy: "redirect-to-https"
@@ -1782,7 +1764,7 @@ Resources:
               PriceClass: "PriceClass_All"
               Enabled: true
               ViewerCertificate: 
-                  AcmCertificateArn: arn:aws:acm:us-east-1:696811459309:certificate/d8f4f7a6-0b17-4909-b634-a8bf9a4883e9
+                  AcmCertificateArn: !Sub arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${pCertificateCloudfront}
                   MinimumProtocolVersion: "TLSv1.2_2019"
                   SslSupportMethod: "sni-only"
               Restrictions: 
