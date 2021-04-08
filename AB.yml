@@ -115,8 +115,17 @@ Parameters:
 
   # pCertificateALB: #certificate ARN for ALB
   #   AllowedPattern: '.*'
-  #   Default: 4b3d8cbb-5424-41bf-b173-9f9512455422
+  #   Default: d8f4f7a6-0b17-4909-b634-a8bf9a4883e9
   #   Description: Certificate ARN for ALB
+  #   MaxLength: '100'
+  #   MinLength: '1'
+  #   NoEcho: 'false'
+  #   Type: String
+
+  # pCertificateCloudfront: #certificate ARN for CloudFront
+  #   AllowedPattern: '.*'
+  #   Default: d8f4f7a6-0b17-4909-b634-a8bf9a4883e9
+  #   Description: Certificate ARN for CloudFront
   #   MaxLength: '100'
   #   MinLength: '1'
   #   NoEcho: 'false'
@@ -138,6 +147,15 @@ Parameters:
     #Description: SSH key pair name for access to web servers
     #NoEcho: 'false'
     #Type: AWS::EC2::KeyPair::KeyName
+
+  pDomainNameCloudFront: #DNS name for cloudfront
+    AllowedPattern: '.*'
+    Default: awsome.kannotha.aws-proserve.com
+    Description: Domain name for CloudFront
+    MaxLength: '100'
+    MinLength: '1'
+    NoEcho: 'false'
+    Type: String
 
 
 
@@ -505,6 +523,16 @@ Resources:
           AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"vpc-flow-logs.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
           MaxSessionDuration: 3600
 
+  rIAMKinesis:
+      Type: "AWS::IAM::Role"
+      Properties:
+          Path: "/service-role/"
+          #RoleName: !Sub "KinesisFirehoseServiceRole-KinesisDem-${AWS::Region}-1616682360239"
+          AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"firehose.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+          MaxSessionDuration: 3600
+          ManagedPolicyArns: 
+            - !Ref rIAMManagedPolicyKinesis
+
 ############################################################################################
 # SECURITY GROUPS
 ############################################################################################
@@ -701,14 +729,18 @@ Resources:
   rALBListener: #listener for application load balancer
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
+        Certificates:
+          -
+            CertificateArn: arn:aws:acm:ca-central-1:696811459309:certificate/47faa4d5-1fe5-4910-b029-7efceec79f24
         DefaultActions:
           -
             Order: 1
             TargetGroupArn: !Ref rTargetGroup
             Type: forward
         LoadBalancerArn: !Ref rALB
-        Port: 80
-        Protocol: HTTP
+        Port: 443
+        Protocol: HTTPS
+        SslPolicy: ELBSecurityPolicy-2016-08
 
 
 ############################################################################################
@@ -1509,7 +1541,6 @@ Resources:
           Properties:
               DeliveryStreamName: "KinesisDemo"
               DeliveryStreamType: "DirectPut"
-              #DeliveryStreamEncryptionConfigurationInput: {}
               S3DestinationConfiguration: 
                   BucketARN: !Sub arn:aws:s3:::${rS3Firehose}
                   BufferingHints: 
@@ -1522,7 +1553,6 @@ Resources:
                   CompressionFormat: "UNCOMPRESSED"
                   EncryptionConfiguration: 
                       NoEncryptionConfig: "NoEncryption"
-                  #Prefix: ""
                   RoleARN: !GetAtt  rIAMKinesis.Arn
 
 
@@ -1635,12 +1665,61 @@ Resources:
                   ]
               }
 
-  rIAMKinesis:
-      Type: "AWS::IAM::Role"
+############################################################################################
+# CLOUDFRONT CDN
+############################################################################################
+
+  CloudFrontDistribution:
+      Type: "AWS::CloudFront::Distribution"
       Properties:
-          Path: "/service-role/"
-          #RoleName: !Sub "KinesisFirehoseServiceRole-KinesisDem-${AWS::Region}-1616682360239"
-          AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"firehose.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
-          MaxSessionDuration: 3600
-          ManagedPolicyArns: 
-            - !Ref rIAMManagedPolicyKinesis
+          DistributionConfig: 
+              Aliases: 
+                - !Ref pDomainNameCloudFront
+              Origins: 
+                - 
+                  ConnectionAttempts: 3
+                  ConnectionTimeout: 3
+                  CustomOriginConfig: 
+                      HTTPPort: 80
+                      HTTPSPort: 443
+                      OriginKeepaliveTimeout: 5
+                      OriginProtocolPolicy: https-only
+                      OriginReadTimeout: 3
+                      OriginSSLProtocols: 
+                        - "TLSv1"
+                        - "TLSv1.1"
+                        - "TLSv1.2"
+                  DomainName: !GetAtt rALB.DNSName
+                  Id: !Ref rALB
+                  #OriginPath: ""
+              OriginGroups: 
+                  Quantity: 0
+              DefaultCacheBehavior: 
+                  AllowedMethods: 
+                    - "HEAD"
+                    - "GET"
+                  CachedMethods: 
+                    - "HEAD"
+                    - "GET"
+                  Compress: true
+                  CachePolicyId: "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+                  OriginRequestPolicyId: "216adef6-5c7f-47e4-b989-5492eafa07d3"
+                  # ForwardedValues: 
+                  #     Cookies: {}
+                  SmoothStreaming: false
+                  TargetOriginId: !Ref rALB
+                  ViewerProtocolPolicy: "redirect-to-https"
+              Comment: ""
+              PriceClass: "PriceClass_All"
+              Enabled: true
+              ViewerCertificate: 
+                  AcmCertificateArn: arn:aws:acm:us-east-1:696811459309:certificate/d8f4f7a6-0b17-4909-b634-a8bf9a4883e9
+                  MinimumProtocolVersion: "TLSv1.2_2019"
+                  SslSupportMethod: "sni-only"
+              Restrictions: 
+                  GeoRestriction: 
+                      RestrictionType: "none"
+              #WebACLId: !Sub "arn:aws:wafv2:us-east-1:${AWS::AccountId}:global/webacl/webACL/5b3b4eca-6927-4151-ae57-66ba239238fb"
+              HttpVersion: "http2"
+              DefaultRootObject: ""
+              IPV6Enabled: true
