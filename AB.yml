@@ -42,9 +42,18 @@ Parameters:
     NoEcho: 'false'
     Type: AWS::EC2::Image::Id
 
-  pBucketNameLogs: #bucket name for S3 log bucket
+  pBucketNameVPCLogs: #bucket name for S3 log bucket
     AllowedPattern: '.*'
     Default: kannotha-logs
+    Description: Bucket name for AB3 log bucket. Must be universally unique.
+    MaxLength: '100'
+    MinLength: '1'
+    NoEcho: 'false'
+    Type: String
+
+  pBucketNameCloudTrailLogs: #bucket name for S3 log bucket
+    AllowedPattern: '.*'
+    Default: kannotha-logs-cloudtrail
     Description: Bucket name for AB3 log bucket. Must be universally unique.
     MaxLength: '100'
     MinLength: '1'
@@ -158,7 +167,6 @@ Parameters:
     Type: String
 
 
-
 Resources:
 ############################################################################################
 # VPC RESOURCES
@@ -255,7 +263,7 @@ Resources:
 
   rVPCFlowLog:
       Type: "AWS::EC2::FlowLog"
-      DependsOn: rBucketPolicy
+      DependsOn: rBucketPolicyVPC
       Properties:
           ResourceId: !Ref rVPC
           TrafficType: "ALL"
@@ -269,6 +277,17 @@ Resources:
             - 
               Key: "Name"
               Value: "MyVPC-Flowlog"
+
+  rCloudTrailTrail:
+      Type: "AWS::CloudTrail::Trail"
+      DependsOn: rS3BucketPolicyCloudTrail
+      Properties:
+          TrailName: "VPC-trail"
+          S3BucketName: !Ref rS3LogsCloudTrail
+          IncludeGlobalServiceEvents: true
+          IsMultiRegionTrail: true
+          EnableLogFileValidation: true
+          IsLogging: true
 
 ############################################################################################
 # SUBNET RESORUCES
@@ -1487,7 +1506,7 @@ Resources:
   rS3Logs:
       Type: "AWS::S3::Bucket"
       Properties:
-          BucketName: !Ref pBucketNameLogs
+          BucketName: !Ref pBucketNameVPCLogs
           BucketEncryption: 
               ServerSideEncryptionConfiguration: 
                 - 
@@ -1506,7 +1525,18 @@ Resources:
                       SSEAlgorithm: "AES256"
                   BucketKeyEnabled: false
 
-  rBucketPolicy:
+  rS3LogsCloudTrail:
+      Type: "AWS::S3::Bucket"
+      Properties:
+          BucketName: !Ref pBucketNameCloudTrailLogs
+          BucketEncryption: 
+              ServerSideEncryptionConfiguration: 
+                - 
+                  ServerSideEncryptionByDefault: 
+                      SSEAlgorithm: "AES256"
+                  BucketKeyEnabled: false
+
+  rBucketPolicyVPC:
       Type: "AWS::S3::BucketPolicy"
       Properties:
           Bucket: !Ref rS3Logs
@@ -1531,6 +1561,45 @@ Resources:
                       Service: "delivery.logs.amazonaws.com"
                   Action: "s3:GetBucketAcl"
                   Resource: !Sub "arn:aws:s3:::${rS3Logs}"
+
+
+  rS3BucketPolicyCloudTrail:
+      Type: "AWS::S3::BucketPolicy"
+      Properties:
+          Bucket: !Ref rS3LogsCloudTrail
+          PolicyDocument: 
+              Version: "2012-10-17"
+              Statement: 
+                - 
+                  Sid: "AWSCloudTrailAclCheck20150319"
+                  Effect: "Allow"
+                  Principal: 
+                      Service: "cloudtrail.amazonaws.com"
+                  Action: "s3:GetBucketAcl"
+                  Resource: !Sub "arn:aws:s3:::${rS3LogsCloudTrail}"
+                - 
+                  Sid: "AWSCloudTrailWrite20150319"
+                  Effect: "Allow"
+                  Principal: 
+                      Service: "cloudtrail.amazonaws.com"
+                  Action: "s3:PutObject"
+                  Resource: !Sub "arn:aws:s3:::${rS3LogsCloudTrail}/AWSLogs/${AWS::AccountId}/*"
+                  Condition: 
+                      StringEquals: 
+                          "s3:x-amz-acl": "bucket-owner-full-control"
+                - 
+                  Sid: "AWSCloudTrailHTTPSOnly20180329"
+                  Effect: "Deny"
+                  Principal: 
+                      Service: "cloudtrail.amazonaws.com"
+                  Action: "s3:*"
+                  Resource: 
+                    - !Sub "arn:aws:s3:::${rS3LogsCloudTrail}/AWSLogs/${AWS::AccountId}/*"
+                    - !Sub "arn:aws:s3:::${rS3LogsCloudTrail}"
+                  Condition: 
+                      Bool: 
+                          "aws:SecureTransport": "false"
+
 
 ############################################################################################
 # FIREHOSE
