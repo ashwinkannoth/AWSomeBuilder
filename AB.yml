@@ -36,7 +36,7 @@ Parameters:
 
   pAMIID: #AMI ID for web server
     AllowedPattern: '.*'
-    Default: ami-0b7de35cf47b997ae
+    Default: ami-09934b230a2c41883 #old one ami-0b7de35cf47b997ae
     Description: AMI ID for the web server
     NoEcho: 'false'
     Type: AWS::EC2::Image::Id
@@ -1744,7 +1744,6 @@ Resources:
                         - "TLSv1.2"
                   DomainName: !GetAtt rALB.DNSName
                   Id: !Ref rALB
-                  #OriginPath: ""
               OriginGroups: 
                   Quantity: 0
               DefaultCacheBehavior: 
@@ -1770,7 +1769,120 @@ Resources:
               Restrictions: 
                   GeoRestriction: 
                       RestrictionType: "none"
-              #WebACLId: !Sub "arn:aws:wafv2:us-east-1:${AWS::AccountId}:global/webacl/webACL/5b3b4eca-6927-4151-ae57-66ba239238fb"
+              #WebACLId: !GetAtt rWAF.Arn
               HttpVersion: "http2"
               DefaultRootObject: ""
               IPV6Enabled: true
+
+# ############################################################################################
+# # WAF
+# ############################################################################################
+
+#   rWAF: #web application firewall
+#     Type: AWS::WAFv2::WebACL
+#     Properties:
+#       Name: CloudFrontWAF
+#       Description: CloudFront WAF
+#       DefaultAction:
+#         Allow: {}
+#       VisibilityConfig:
+#         SampledRequestsEnabled: true
+#         CloudWatchMetricsEnabled: true
+#         MetricName: CloudFrontWAF-metrics
+#       Scope: REGIONAL
+#       Rules:
+#         -
+#           Name: AWS-AWSManagedRulesSQLiRuleSet
+#           Priority: 0
+#           OverrideAction:
+#               None: {}
+#           Statement:
+#             ManagedRuleGroupStatement:
+#               VendorName: AWS
+#               Name: AWSManagedRulesSQLiRuleSet
+#           VisibilityConfig:
+#             SampledRequestsEnabled: true
+#             CloudWatchMetricsEnabled: true
+#             MetricName: AWS-AWSManagedRulesSQLiRuleSet
+#         -
+#           Name: AWS-AWSManagedRulesUnixRuleSet
+#           Priority: 1
+#           OverrideAction:
+#             None: {}
+#           Statement:
+#             ManagedRuleGroupStatement:
+#               VendorName: AWS
+#               Name: AWSManagedRulesUnixRuleSet
+#           VisibilityConfig:
+#             SampledRequestsEnabled: true
+#             CloudWatchMetricsEnabled: true
+#             MetricName: AWS-AWSManagedRulesUnixRuleSet
+#         -
+#           Name: AWS-AWSManagedRulesLinuxRuleSet
+#           Priority: 2
+#           OverrideAction:
+#             None: {}
+#           Statement:
+#             ManagedRuleGroupStatement:
+#               VendorName: AWS
+#               Name: AWSManagedRulesLinuxRuleSet
+#           VisibilityConfig:
+#             SampledRequestsEnabled: true
+#             CloudWatchMetricsEnabled: true
+#             MetricName: AWS-AWSManagedRulesLinuxRuleSet
+#         -
+#           Name: AWS-AWSManagedRulesKnownBadInputsRuleSet
+#           Priority: 3
+#           OverrideAction:
+#               None: {}
+#           Statement:
+#             ManagedRuleGroupStatement:
+#               VendorName: AWS
+#               Name: AWSManagedRulesKnownBadInputsRuleSet
+#           VisibilityConfig:
+#             SampledRequestsEnabled: true
+#             CloudWatchMetricsEnabled: true
+#             MetricName: AWS-AWSManagedRulesKnownBadInputsRuleSet
+#         -
+#           Name: AWS-AWSManagedRulesCommonRuleSet
+#           Priority: 4
+#           OverrideAction:
+#             None: {}
+#           Statement:
+#             ManagedRuleGroupStatement:
+#               VendorName: AWS
+#               Name: AWSManagedRulesCommonRuleSet
+#           VisibilityConfig:
+#             SampledRequestsEnabled: true
+#             CloudWatchMetricsEnabled: true
+#             MetricName: AWS-AWSManagedRulesCommonRuleSet
+#         -
+#           Name: AWS-AWSManagedRulesAnonymousIpList
+#           Priority: 5
+#           OverrideAction:
+#             None: {}
+#           Statement:
+#             ManagedRuleGroupStatement:
+#               VendorName: AWS
+#               Name: AWSManagedRulesAnonymousIpList
+#           VisibilityConfig:
+#             SampledRequestsEnabled: true
+#             CloudWatchMetricsEnabled: true
+#             MetricName: AWS-AWSManagedRulesAnonymousIpList
+#         -
+#           Name: AWS-AWSManagedRulesAmazonIpReputationList
+#           Priority: 5
+#           OverrideAction:
+#             None: {}
+#           Statement:
+#             ManagedRuleGroupStatement:
+#               VendorName: AWS
+#               Name: AWSManagedRulesAmazonIpReputationList
+#           VisibilityConfig:
+#             SampledRequestsEnabled: true
+#             CloudWatchMetricsEnabled: true
+#             MetricName: AWS-AWSManagedRulesAmazonIpReputationList
+#       Tags:
+#         -
+#           Key: Name
+#           Value: WAF
