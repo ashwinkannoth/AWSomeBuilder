@@ -36,7 +36,7 @@ Parameters:
 
   pAMIID: #AMI ID for web server
     AllowedPattern: '.*'
-    Default: ami-09934b230a2c41883 #old one ami-0b7de35cf47b997ae
+    Default: ami-09934b230a2c41883 # usa ami-0742b4e673072066f 
     Description: AMI ID for the web server
     NoEcho: 'false'
     Type: AWS::EC2::Image::Id
@@ -157,6 +157,15 @@ Parameters:
     NoEcho: 'false'
     Type: String
 
+  pRegion: #username for Aurora access
+    AllowedPattern: '.*'
+    Default: ca-central-1
+    Description: default region for services
+    MaxLength: '20'
+    MinLength: '2'
+    NoEcho: 'false'
+    Type: String
+
 
 Resources:
 ############################################################################################
@@ -178,14 +187,14 @@ Resources:
   rDHCP:
        Type: "AWS::EC2::DHCPOptions"
        Properties:
-           DomainName: !Sub "${AWS::Region}.compute.internal"
+           DomainName: !Sub "${pRegion}.compute.internal"
 
   rEC2VPCEndpoint:
       Type: "AWS::EC2::VPCEndpoint"
       Properties:
           VpcEndpointType: "Interface"
           VpcId: !Ref rVPC 
-          ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
+          ServiceName: !Sub "com.amazonaws.${pRegion}.ssm"
           PolicyDocument: |
               {
                   "Statement": [
@@ -209,7 +218,7 @@ Resources:
       Properties:
           VpcEndpointType: "Interface"
           VpcId: !Ref rVPC
-          ServiceName: !Sub "com.amazonaws.${AWS::Region}.ec2messages"
+          ServiceName: !Sub "com.amazonaws.${pRegion}.ec2messages"
           PolicyDocument: |
               {
                   "Statement": [
@@ -233,7 +242,7 @@ Resources:
       Properties:
           VpcEndpointType: "Interface"
           VpcId: !Ref rVPC
-          ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
+          ServiceName: !Sub "com.amazonaws.${pRegion}.ssmmessages"
           PolicyDocument: |
               {
                   "Statement": [
@@ -287,7 +296,7 @@ Resources:
   rPublicSubnetA:
       Type: "AWS::EC2::Subnet"
       Properties:
-          AvailabilityZone: !Sub ${AWS::Region}a
+          AvailabilityZone: !Sub ${pRegion}a
           CidrBlock: "10.0.0.0/24"
           VpcId: !Ref rVPC
           MapPublicIpOnLaunch: false
@@ -299,7 +308,7 @@ Resources:
   rPublicSubnetB:
       Type: "AWS::EC2::Subnet"
       Properties:
-          AvailabilityZone: !Sub ${AWS::Region}b
+          AvailabilityZone: !Sub ${pRegion}b
           CidrBlock: "10.0.1.0/24"
           VpcId: !Ref rVPC
           MapPublicIpOnLaunch: false
@@ -311,7 +320,7 @@ Resources:
   rPrivateSubnetA:
       Type: "AWS::EC2::Subnet"
       Properties:
-          AvailabilityZone: !Sub ${AWS::Region}a
+          AvailabilityZone: !Sub ${pRegion}a
           CidrBlock: "10.0.2.0/24"
           VpcId: !Ref rVPC
           MapPublicIpOnLaunch: false
@@ -323,7 +332,7 @@ Resources:
   rPrivateSubnetB:
       Type: "AWS::EC2::Subnet"
       Properties:
-          AvailabilityZone: !Sub ${AWS::Region}b
+          AvailabilityZone: !Sub ${pRegion}b
           CidrBlock: "10.0.3.0/24"
           VpcId: !Ref rVPC
           MapPublicIpOnLaunch: false
@@ -737,7 +746,7 @@ Resources:
     Properties:
         Certificates:
           -
-            CertificateArn: !Sub arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${pCertificateALB}
+            CertificateArn: !Sub arn:aws:acm:${pRegion}:${AWS::AccountId}:certificate/${pCertificateALB}
         DefaultActions:
           -
             Order: 1
@@ -841,7 +850,7 @@ Resources:
             chmod +x ./install
             sudo ./install auto
             mkdir /efs
-            sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${rEFS}.efs.${AWS::Region}.amazonaws.com:/ /efs
+            sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${rEFS}.efs.${pRegion}.amazonaws.com:/ /efs
             sudo yum install -y mysql
 
 ############################################################################################
@@ -973,8 +982,8 @@ Resources:
       Type: AWS::RDS::DBCluster
       Properties:
         AvailabilityZones:
-          - !Sub ${AWS::Region}a
-          - !Sub ${AWS::Region}b
+          - !Sub ${pRegion}a
+          - !Sub ${pRegion}b
         BackupRetentionPeriod: 1
         DBClusterIdentifier: AuroraDB
         DBClusterParameterGroupName: default.aurora-mysql5.7
@@ -1006,7 +1015,7 @@ Resources:
     Type: AWS::RDS::DBInstance
     Properties:
       AutoMinorVersionUpgrade: true
-      AvailabilityZone: !Sub ${AWS::Region}a
+      AvailabilityZone: !Sub ${pRegion}a
       CACertificateIdentifier: rds-ca-2019
       DBClusterIdentifier: !Ref rAuroraCluster
       DBInstanceClass: db.t3.small
@@ -1032,7 +1041,7 @@ Resources:
     Type: AWS::RDS::DBInstance
     Properties:
       AutoMinorVersionUpgrade: true
-      AvailabilityZone: !Sub ${AWS::Region}b
+      AvailabilityZone: !Sub ${pRegion}b
       CACertificateIdentifier: rds-ca-2019
       DBClusterIdentifier: !Ref rAuroraCluster
       DBInstanceClass: db.t3.small
@@ -1095,7 +1104,7 @@ Resources:
               OutputArtifacts:
                 -
                   Name: SourceArtifact
-              Region: !Ref AWS::Region
+              Region: !Ref pRegion
               Namespace: SourceVariables
               RunOrder: 1
         -
@@ -1114,7 +1123,7 @@ Resources:
               InputArtifacts:
                 -
                   Name: SourceArtifact
-              Region: !Ref AWS::Region
+              Region: !Ref pRegion
               RunOrder: 1
       Tags:
         -
@@ -1452,7 +1461,7 @@ Resources:
             "CodeCommit Repository State Change"
           ],
           "resources": [
-            "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${rRepository.Name}"
+            "arn:aws:codecommit:${pRegion}:${AWS::AccountId}:${rRepository.Name}"
           ],
           "detail": {
             "event": [
@@ -1469,7 +1478,7 @@ Resources:
         }
       Targets:
         -
-          Arn: !Sub arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${rPipeline}
+          Arn: !Sub arn:aws:codepipeline:${pRegion}:${AWS::AccountId}:${rPipeline}
           Id: codepipeline-cloudwatchtrigger
           RoleArn: !GetAtt rIAMRoleCloudWatchEvent.Arn
 
@@ -1612,7 +1621,7 @@ Resources:
   rIAMManagedPolicyKinesis:
       Type: "AWS::IAM::ManagedPolicy"
       Properties:
-          ManagedPolicyName: !Sub "KinesisFirehoseServicePolicy-KinesisDemo-${AWS::Region}"
+          ManagedPolicyName: !Sub "KinesisFirehoseServicePolicy-KinesisDemo-${pRegion}"
           Path: "/service-role/"
           PolicyDocument: !Sub |
               {
@@ -1627,9 +1636,9 @@ Resources:
                               "glue:GetTableVersions"
                           ],
                           "Resource": [
-                              "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog",
-                              "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%",
-                              "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                              "arn:aws:glue:${pRegion}:${AWS::AccountId}:catalog",
+                              "arn:aws:glue:${pRegion}:${AWS::AccountId}:database/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%",
+                              "arn:aws:glue:${pRegion}:${AWS::AccountId}:table/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
                           ]
                       },
                       {
@@ -1655,7 +1664,7 @@ Resources:
                               "lambda:InvokeFunction",
                               "lambda:GetFunctionConfiguration"
                           ],
-                          "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                          "Resource": "arn:aws:lambda:${pRegion}:${AWS::AccountId}:function:%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
                       },
                       {
                           "Effect": "Allow",
@@ -1664,11 +1673,11 @@ Resources:
                               "kms:Decrypt"
                           ],
                           "Resource": [
-                              "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                              "arn:aws:kms:${pRegion}:${AWS::AccountId}:key/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
                           ],
                           "Condition": {
                               "StringEquals": {
-                                  "kms:ViaService": "s3.${AWS::Region}.amazonaws.com"
+                                  "kms:ViaService": "s3.${pRegion}.amazonaws.com"
                               },
                               "StringLike": {
                                   "kms:EncryptionContext:aws:s3:arn": [
@@ -1684,7 +1693,7 @@ Resources:
                               "logs:PutLogEvents"
                           ],
                           "Resource": [
-                              "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/kinesisfirehose/KinesisDemo:log-stream:*"
+                              "arn:aws:logs:${pRegion}:${AWS::AccountId}:log-group:/aws/kinesisfirehose/KinesisDemo:log-stream:*"
                           ]
                       },
                       {
@@ -1696,7 +1705,7 @@ Resources:
                               "kinesis:GetRecords",
                               "kinesis:ListShards"
                           ],
-                          "Resource": "arn:aws:kinesis:${AWS::Region}:${AWS::AccountId}:stream/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                          "Resource": "arn:aws:kinesis:${pRegion}:${AWS::AccountId}:stream/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
                       },
                       {
                           "Effect": "Allow",
@@ -1704,11 +1713,11 @@ Resources:
                               "kms:Decrypt"
                           ],
                           "Resource": [
-                              "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+                              "arn:aws:kms:${pRegion}:${AWS::AccountId}:key/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
                           ],
                           "Condition": {
                               "StringEquals": {
-                                  "kms:ViaService": "kinesis.${AWS::Region}.amazonaws.com"
+                                  "kms:ViaService": "kinesis.${pRegion}.amazonaws.com"
                               },
                               "StringLike": {
                                   "kms:EncryptionContext:aws:kinesis:arn": "arn:aws:kinesis:ca-central-1:${AWS::AccountId}:stream/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
@@ -1774,115 +1783,115 @@ Resources:
               DefaultRootObject: ""
               IPV6Enabled: true
 
-# ############################################################################################
-# # WAF
-# ############################################################################################
+############################################################################################
+# WAF
+############################################################################################
 
-#   rWAF: #web application firewall
-#     Type: AWS::WAFv2::WebACL
-#     Properties:
-#       Name: CloudFrontWAF
-#       Description: CloudFront WAF
-#       DefaultAction:
-#         Allow: {}
-#       VisibilityConfig:
-#         SampledRequestsEnabled: true
-#         CloudWatchMetricsEnabled: true
-#         MetricName: CloudFrontWAF-metrics
-#       Scope: REGIONAL
-#       Rules:
-#         -
-#           Name: AWS-AWSManagedRulesSQLiRuleSet
-#           Priority: 0
-#           OverrideAction:
-#               None: {}
-#           Statement:
-#             ManagedRuleGroupStatement:
-#               VendorName: AWS
-#               Name: AWSManagedRulesSQLiRuleSet
-#           VisibilityConfig:
-#             SampledRequestsEnabled: true
-#             CloudWatchMetricsEnabled: true
-#             MetricName: AWS-AWSManagedRulesSQLiRuleSet
-#         -
-#           Name: AWS-AWSManagedRulesUnixRuleSet
-#           Priority: 1
-#           OverrideAction:
-#             None: {}
-#           Statement:
-#             ManagedRuleGroupStatement:
-#               VendorName: AWS
-#               Name: AWSManagedRulesUnixRuleSet
-#           VisibilityConfig:
-#             SampledRequestsEnabled: true
-#             CloudWatchMetricsEnabled: true
-#             MetricName: AWS-AWSManagedRulesUnixRuleSet
-#         -
-#           Name: AWS-AWSManagedRulesLinuxRuleSet
-#           Priority: 2
-#           OverrideAction:
-#             None: {}
-#           Statement:
-#             ManagedRuleGroupStatement:
-#               VendorName: AWS
-#               Name: AWSManagedRulesLinuxRuleSet
-#           VisibilityConfig:
-#             SampledRequestsEnabled: true
-#             CloudWatchMetricsEnabled: true
-#             MetricName: AWS-AWSManagedRulesLinuxRuleSet
-#         -
-#           Name: AWS-AWSManagedRulesKnownBadInputsRuleSet
-#           Priority: 3
-#           OverrideAction:
-#               None: {}
-#           Statement:
-#             ManagedRuleGroupStatement:
-#               VendorName: AWS
-#               Name: AWSManagedRulesKnownBadInputsRuleSet
-#           VisibilityConfig:
-#             SampledRequestsEnabled: true
-#             CloudWatchMetricsEnabled: true
-#             MetricName: AWS-AWSManagedRulesKnownBadInputsRuleSet
-#         -
-#           Name: AWS-AWSManagedRulesCommonRuleSet
-#           Priority: 4
-#           OverrideAction:
-#             None: {}
-#           Statement:
-#             ManagedRuleGroupStatement:
-#               VendorName: AWS
-#               Name: AWSManagedRulesCommonRuleSet
-#           VisibilityConfig:
-#             SampledRequestsEnabled: true
-#             CloudWatchMetricsEnabled: true
-#             MetricName: AWS-AWSManagedRulesCommonRuleSet
-#         -
-#           Name: AWS-AWSManagedRulesAnonymousIpList
-#           Priority: 5
-#           OverrideAction:
-#             None: {}
-#           Statement:
-#             ManagedRuleGroupStatement:
-#               VendorName: AWS
-#               Name: AWSManagedRulesAnonymousIpList
-#           VisibilityConfig:
-#             SampledRequestsEnabled: true
-#             CloudWatchMetricsEnabled: true
-#             MetricName: AWS-AWSManagedRulesAnonymousIpList
-#         -
-#           Name: AWS-AWSManagedRulesAmazonIpReputationList
-#           Priority: 5
-#           OverrideAction:
-#             None: {}
-#           Statement:
-#             ManagedRuleGroupStatement:
-#               VendorName: AWS
-#               Name: AWSManagedRulesAmazonIpReputationList
-#           VisibilityConfig:
-#             SampledRequestsEnabled: true
-#             CloudWatchMetricsEnabled: true
-#             MetricName: AWS-AWSManagedRulesAmazonIpReputationList
-#       Tags:
-#         -
-#           Key: Name
-#           Value: WAF
+  rWAF: #web application firewall
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: CloudFrontWAF
+      Description: CloudFront WAF
+      DefaultAction:
+        Allow: {}
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: CloudFrontWAF-metrics
+      Scope: REGIONAL
+      Rules:
+        -
+          Name: AWS-AWSManagedRulesSQLiRuleSet
+          Priority: 0
+          OverrideAction:
+              None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesSQLiRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWS-AWSManagedRulesSQLiRuleSet
+        -
+          Name: AWS-AWSManagedRulesUnixRuleSet
+          Priority: 1
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesUnixRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWS-AWSManagedRulesUnixRuleSet
+        -
+          Name: AWS-AWSManagedRulesLinuxRuleSet
+          Priority: 2
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesLinuxRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWS-AWSManagedRulesLinuxRuleSet
+        -
+          Name: AWS-AWSManagedRulesKnownBadInputsRuleSet
+          Priority: 3
+          OverrideAction:
+              None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesKnownBadInputsRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWS-AWSManagedRulesKnownBadInputsRuleSet
+        -
+          Name: AWS-AWSManagedRulesCommonRuleSet
+          Priority: 4
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWS-AWSManagedRulesCommonRuleSet
+        -
+          Name: AWS-AWSManagedRulesAnonymousIpList
+          Priority: 5
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesAnonymousIpList
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWS-AWSManagedRulesAnonymousIpList
+        -
+          Name: AWS-AWSManagedRulesAmazonIpReputationList
+          Priority: 6
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesAmazonIpReputationList
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWS-AWSManagedRulesAmazonIpReputationList
+      Tags:
+        -
+          Key: Name
+          Value: WAF
