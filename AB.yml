@@ -757,6 +757,40 @@ Resources:
         Protocol: HTTPS
         SslPolicy: ELBSecurityPolicy-2016-08
 
+  rElasticLoadBalancingV2ListenerRule:
+    Type: "AWS::ElasticLoadBalancingV2::ListenerRule"
+    Properties:
+        Priority: 1
+        ListenerArn: !Ref rALBListener
+        Conditions: 
+          - 
+            Field: "path-pattern"
+            Values: 
+              - "/second.html"
+        Actions: 
+          - 
+            Type: "authenticate-cognito"
+            AuthenticateCognitoConfig: 
+                UserPoolArn: !GetAtt rCognitoUserPool.Arn
+                UserPoolClientId: !Ref rCognitoUserPoolClient
+                UserPoolDomain: !Ref rUserPoolDomain
+                SessionCookieName: "AWSELBAuthSessionCookie"
+                Scope: "openid"
+                SessionTimeout: 604800
+                OnUnauthenticatedRequest: "authenticate"
+            Order: 1
+          - 
+            Type: "forward"
+            TargetGroupArn: !Ref rTargetGroup
+            Order: 2
+            ForwardConfig: 
+                TargetGroups: 
+                  - 
+                    TargetGroupArn: !Ref rTargetGroup
+                    Weight: 1
+                TargetGroupStickinessConfig: 
+                    Enabled: false
+
 
 ############################################################################################
 # Target Groups
@@ -1482,6 +1516,16 @@ Resources:
           Id: codepipeline-cloudwatchtrigger
           RoleArn: !GetAtt rIAMRoleCloudWatchEvent.Arn
 
+  rIAMRoleCognito:
+      Type: "AWS::IAM::Role"
+      Properties:
+          Path: "/service-role/"
+          RoleName: "Springfield-SMS-Role-Cognito"
+          AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"cognito-idp.amazonaws.com\"},\"Action\":\"sts:AssumeRole\",\"Condition\":{\"StringEquals\":{\"sts:ExternalId\":\"06c1c5db-8f1e-43f1-be53-837920a2fada\"}}}]}"
+          MaxSessionDuration: 3600
+          ManagedPolicyArns: 
+            - !Sub "arn:aws:iam::${AWS::AccountId}:policy/service-role/Cognito-1618320388534"
+
 ############################################################################################
 # S3 BUCKETS
 ############################################################################################
@@ -1895,3 +1939,298 @@ Resources:
         -
           Key: Name
           Value: WAF
+
+############################################################################################
+# Cognito
+############################################################################################
+
+  rCognitoUserPool:
+    Type: "AWS::Cognito::UserPool"
+    Properties:
+        UserPoolName: "Springfield"
+        Policies: 
+            PasswordPolicy: 
+                MinimumLength: 8
+                RequireUppercase: false
+                RequireLowercase: false
+                RequireNumbers: false
+                RequireSymbols: false
+                TemporaryPasswordValidityDays: 7
+        LambdaConfig: {}
+        Schema: 
+          - 
+            Name: "sub"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: false
+            Required: true
+            StringAttributeConstraints: 
+                MinLength: "1"
+                MaxLength: "2048"
+          - 
+            Name: "name"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "given_name"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "family_name"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "middle_name"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "nickname"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "preferred_username"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "profile"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "picture"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "website"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "email"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: true
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "email_verified"
+            AttributeDataType: "Boolean"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+          - 
+            Name: "gender"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "birthdate"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            StringAttributeConstraints: 
+                MinLength: "10"
+                MaxLength: "10"
+          - 
+            Name: "zoneinfo"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "locale"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "phone_number"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: true
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "phonenumber_verified"
+            AttributeDataType: "Boolean"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+          - 
+            Name: "address"
+            AttributeDataType: "String"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            StringAttributeConstraints: 
+                MinLength: "0"
+                MaxLength: "2048"
+          - 
+            Name: "updated_at"
+            AttributeDataType: "Number"
+            DeveloperOnlyAttribute: false
+            Mutable: true
+            Required: false
+            NumberAttributeConstraints: 
+                MinValue: "0"
+        AutoVerifiedAttributes: 
+          - "phone_number"
+        AliasAttributes: 
+          - "email"
+        SmsVerificationMessage: "Your verification code is {####}. "
+        EmailVerificationMessage: "Your verification code is {####}. "
+        EmailVerificationSubject: "Your verification code"
+        SmsAuthenticationMessage: "Your verification code is {####}. "
+        MfaConfiguration: "ON"
+        EmailConfiguration: 
+            EmailSendingAccount: "COGNITO_DEFAULT"
+        SmsConfiguration: 
+            SnsCallerArn: !GetAtt rIAMRoleCognito.Arn
+            ExternalId: "06c1c5db-8f1e-43f1-be53-837920a2fada"
+        AdminCreateUserConfig: 
+            AllowAdminCreateUserOnly: false
+            #UnusedAccountValidityDays: 7
+            InviteMessageTemplate: 
+                SMSMessage: "Your username is {username} and temporary password is {####}. "
+                EmailMessage: "Your username is {username} and temporary password is {####}. "
+                EmailSubject: "Your temporary password"
+        UserPoolTags: {}
+        AccountRecoverySetting: 
+            RecoveryMechanisms: 
+              - 
+                Priority: 1
+                Name: "verified_email"
+        UsernameConfiguration: 
+            CaseSensitive: false
+        VerificationMessageTemplate: 
+            SmsMessage: "Your verification code is {####}. "
+            EmailMessage: "Your verification code is {####}. "
+            EmailSubject: "Your verification code"
+            DefaultEmailOption: "CONFIRM_WITH_CODE"
+
+  rUserPoolDomain: 
+    Type: AWS::Cognito::UserPoolDomain
+    Properties: 
+      #CustomDomainConfig: CustomDomainConfigType
+      Domain: springfieldab
+      UserPoolId: !Ref rCognitoUserPool
+
+  rCognitoUserPoolClient:
+    Type: "AWS::Cognito::UserPoolClient"
+    Properties:
+        UserPoolId: !Ref rCognitoUserPool
+        ClientName: "springfieldappclient"
+        RefreshTokenValidity: 30
+        SupportedIdentityProviders: 
+          - "COGNITO"
+        ReadAttributes: 
+          - "address"
+          - "birthdate"
+          - "email"
+          - "email_verified"
+          - "family_name"
+          - "gender"
+          - "given_name"
+          - "locale"
+          - "middle_name"
+          - "name"
+          - "nickname"
+          - "phone_number"
+          - "phone_number_verified"
+          - "picture"
+          - "preferred_username"
+          - "profile"
+          - "updated_at"
+          - "website"
+          - "zoneinfo"
+        WriteAttributes: 
+          - "address"
+          - "birthdate"
+          - "email"
+          - "family_name"
+          - "gender"
+          - "given_name"
+          - "locale"
+          - "middle_name"
+          - "name"
+          - "nickname"
+          - "phone_number"
+          - "picture"
+          - "preferred_username"
+          - "profile"
+          - "updated_at"
+          - "website"
+          - "zoneinfo"
+        ExplicitAuthFlows: 
+          - "ALLOW_CUSTOM_AUTH"
+          - "ALLOW_REFRESH_TOKEN_AUTH"
+          - "ALLOW_USER_SRP_AUTH"
+        GenerateSecret: true
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthScopes:
+          - "openid"
+        AllowedOAuthFlows:
+          - "code"
+        CallbackURLs:
+          - https://awsome.kannotha.aws-proserve.com/oauth2/idpresponse
+        LogoutURLs:
+          - https://www.google.com/
+        PreventUserExistenceErrors: "ENABLED"
