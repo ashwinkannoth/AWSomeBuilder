@@ -61,7 +61,7 @@ Parameters:
 
   pBucketNameFirehose: #bucket name for S3 firehose bucket
     AllowedPattern: '.*'
-    Default: kannothafirehoselogs
+    Default: kannotha-firehose-logs
     Description: Bucket name for Firehose stream destination. Must be universally unique.
     MaxLength: '100'
     MinLength: '1'
