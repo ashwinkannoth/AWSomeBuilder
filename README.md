@@ -6,7 +6,7 @@ This project creates a highly available and scalable architecture to host a sing
 
 - [Introduction](#introduction)
 
-- [Prerequisites](#prerequisite)
+- [Architecture Diagaram](#architecturediagaram)
   * [Sub-heading](#sub-heading-1)
     + [Sub-sub-heading](#sub-sub-heading-1)
 - [Heading](#heading-2)
@@ -14,9 +14,7 @@ This project creates a highly available and scalable architecture to host a sing
     + [Sub-sub-heading](#sub-sub-heading-2)
 
 ## Introduction
-This project will provide you with the resources to build and deploy your own single page web application. The architecture is portrayed in the diagram shown below (nb. VPN Gateway Branch + Fleet/IoT GW is not implemented due to practical reasons). 
-
-![Architecture Diagaram](https://user-images.githubusercontent.com/32502465/114913033-b2a70680-9dee-11eb-859f-4a0cd311682e.jpg)
+This project will provide you with the resources to build and deploy your own single page web application. The architecture is portrayed in the diagram shown [here](#here) (nb. VPN Gateway Branch + Fleet/IoT GW is not implemented due to practical reasons). 
 
 Let us cover the key components that will be installed, and the role they play in this architecture:
 
@@ -35,9 +33,10 @@ Let us cover the key components that will be installed, and the role they play i
 - [x] [Athena](https://aws.amazon.com/athena/?whats-new-cards.sort-by=item.additionalFields.postDateTime&whats-new-cards.sort-order=desc) is an interactive query service that analyze data in S3 using standard SQL. 
 - [x] [CodePipeline](https://aws.amazon.com/codepipeline/), a fully managed continuious delivery service that enables automatic release pipelines for fast and reliable application updates. Stores code in [CodeCommit](https://aws.amazon.com/codecommit/), a fully managed source code control service that hosts secure git-based repositories. CodePipeline will then use [CodeDeploy](https://aws.amazon.com/codedeploy/) to deploy the service into the ASG.   
 
-## Prerequisite
+## Architecture Diagaram
 
-This is an h1 heading
+![AB Proposal-2(1)-Copy of Copy of Page-2](https://user-images.githubusercontent.com/32502465/114927451-78923080-9dff-11eb-9de3-07ede5d99611.jpg)
+
 
 ### Sub-heading
 
