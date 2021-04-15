@@ -39,11 +39,9 @@ Let us cover the key components that will be installed, and the role they play i
 Please ensure the following prerequisites are met prior to deploying this application:
 - [x] Basic AWS Console knowledge
 - [x] Permissions to deplopy CloudFormation templates within your AWS account. 
-- [x] Valid domain names along with certificates.   
-### Sub-heading
+- [x] Valid domain names along with certificates. Replace Cognito callback URL + CloudFormation URL with appropriate DNS names. Replace certificate values with appropriate certificates.  
 
-This is an h2 heading
 
-#### Sub-sub-heading
 
-This is an h3 heading
+
+
