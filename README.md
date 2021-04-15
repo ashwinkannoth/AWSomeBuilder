@@ -6,7 +6,7 @@ This project creates a highly available and scalable architecture to host a sing
 
 - [Introduction](#introduction)
 
-- [Heading](#heading-1)
+- [Prerequisites](#heading-1)
   * [Sub-heading](#sub-heading-1)
     + [Sub-sub-heading](#sub-sub-heading-1)
 - [Heading](#heading-2)
@@ -14,7 +14,9 @@ This project creates a highly available and scalable architecture to host a sing
     + [Sub-sub-heading](#sub-sub-heading-2)
 
 ## Introduction
-This project will provide you with the resources to build and deploy your own single page web application. The architecture 
+This project will provide you with the resources to build and deploy your own single page web application. The architecture is portrayed in the diagram shown below (nb. VPN Gateway Branch + Fleet/IoT GW is not implemented due to practical reasons). 
+
+![Architecture Diagaram](https://user-images.githubusercontent.com/32502465/114913033-b2a70680-9dee-11eb-859f-4a0cd311682e.jpg)
 
 
 ### Sub-heading
