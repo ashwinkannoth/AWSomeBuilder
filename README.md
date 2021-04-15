@@ -1,4 +1,4 @@
-#Springfield Carshare Website Architecture
+# Springfield Carshare Website Architecture
 
 ## Abstract 
 Through this project you will create a highly available and scalable architecture to host a single page web application. It consists of, but is not limited to, the following features: Amazon Aurora as a backend database, EFS as a NFS backend storage, S3 to store logs or streaming data, and a fully integrated CI/CD pipeline. 
@@ -14,7 +14,7 @@ Through this project you will create a highly available and scalable architectur
   * [Sub-heading](#sub-heading-2)
     + [Sub-sub-heading](#sub-sub-heading-2)
 
-## Heading
+## Introduction
 
 This is an h1 heading
 
