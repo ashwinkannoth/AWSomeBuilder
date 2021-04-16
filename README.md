@@ -79,6 +79,7 @@ The functionality of this architecture can be tested in various ways. The follow
 
 ## Contact
 
+If you have any questions feel free to contact me @ kannotha@amazon.com
 
 
 
