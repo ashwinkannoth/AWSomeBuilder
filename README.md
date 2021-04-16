@@ -65,7 +65,7 @@ Please ensure the following prerequisites are met prior to deploying this applic
 
 ## Next Steps & Testing
 The functionality of this architecture can be tested in various ways. The following list contains a few suggested methods: 
-    - Connect your repository to AWS CodeCommit by following the instructions [here](https://docs.aws.amazon.com/codecommit/latest/userguide/how-to-connect.html). Once a commit has been made and pushed, you can observe the pipeline progress using AWS CodePipeline.  
+- Connect your repository to AWS CodeCommit by following the instructions [here](https://docs.aws.amazon.com/codecommit/latest/userguide/how-to-connect.html). Once a commit has been made and pushed, you can observe the pipeline progress using AWS CodePipeline.  
 
 
 
