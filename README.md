@@ -55,15 +55,15 @@ Please ensure the following prerequisites are met prior to deploying this applic
 1. Navigate to the CloudFormations page within your AWS Console. 
 2. Click _Create stack_. 
 3. Select _Template is ready_ and _Upload a template file_. Choose the AB.yml file. Hit next when complete. 
-4. Enter a _Stack name_. Edit the paramters as needed. Once complete, click _Next_. Please note the following:
+4. Enter a _Stack name_. Edit the parameters as needed. Once complete, click _Next_. Please note the following:
     - Ensure AMI ID is valid in your region of choice. 
     - Default PW for Aurora is "password". 
     - Bucket names must be globally unqiue. 
-    - Replace the certificiates with ones which are unique to your use case. 
+    - Replace the certificates with ones which are unique to your use case. 
     - Replace the CloudFront domain name with one which is unique to your use case. 
 5. Leave all options as default, scroll down and click _Next_. 
-6. Review your Stack. Select the checkbox acknowleding the creation of IAM resoruces with custom names. Click _Create Stack_.
-7. Complete stack creation will take approximatley: 30 minutes. You may view the progress of individual events in the Events tab. You can view the progress of resoruce creation in the Resources tab. 
+6. Review your Stack. Select the checkbox acknowledging the creation of IAM resources with custom names. Click _Create Stack_.
+7. Complete stack creation will take approximately: 30 minutes. You may view the progress of individual events in the Events tab. You can view the progress of resource creation in the Resources tab. 
 8. The _Status_ of the stack will go from 'CREATE_IN_PROGRESS' to 'CREATE_COMPLETE' when successfully completed. 
 9. Congratulations! You are now complete. 
 
