@@ -10,6 +10,8 @@ This project creates a highly available and scalable architecture to host a sing
 
 - [Prerequisites](#prerequisites)
 
+- [Installation Instructions](#installinstructions)
+
 ## Introduction
 This project will provide you with the resources to build and deploy your own single page web application. The architecture is portrayed in the diagram shown in the following section (nb. VPN Gateway Branch + Fleet/IoT GW is not implemented due to practical reasons). 
 
@@ -43,6 +45,10 @@ Please ensure the following prerequisites are met prior to deploying this applic
 - [x] Basic AWS Console knowledge
 - [x] Permissions to deploy CloudFormation templates within your AWS account. 
 - [x] Valid domain names along with certificates. Replace Cognito callback URL + CloudFormation URL with appropriate DNS names. Replace certificate values with appropriate certificates. [Amazon Route53](https://aws.amazon.com/route53/) can be used for DNS related tasks. [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) can be used for provisioning and managing certificates. 
+
+## Deployment Instructions
+
+
 
 
 
