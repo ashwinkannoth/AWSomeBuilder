@@ -48,7 +48,15 @@ Please ensure the following prerequisites are met prior to deploying this applic
 
 ## Deployment
 
-
+1. Navigate to the CloudFormations page within your AWS Console. 
+2. Click _Create stack_. 
+3. Select _Template is ready_ and _Upload a template file_. Choose the AB.yml file. Hit next when complete. 
+4. Enter a _Stack name_. Edit the paramters as needed. Please note the following:
+  - Ensure AMI ID is valid in your region of choice. 
+  - Default PW for Aurora is password. 
+  - Bucket names must be globally unqiue. 
+  - Replace the certificiates with ones which are unique to your use case. 
+  - Replace the CloudFront domain name with one which is unique to your use case. 
 
 
 
