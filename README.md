@@ -10,7 +10,7 @@ This project creates a highly available and scalable architecture to host a sing
 
 - [Prerequisites](#prerequisites)
 
-- [Installation Instructions](#installinstructions)
+- [Deployment Instructions](#deploymentinstructions)
 
 ## Introduction
 This project will provide you with the resources to build and deploy your own single page web application. The architecture is portrayed in the diagram shown in the following section (nb. VPN Gateway Branch + Fleet/IoT GW is not implemented due to practical reasons). 
