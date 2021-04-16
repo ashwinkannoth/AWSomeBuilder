@@ -12,6 +12,10 @@ This project creates a highly available and scalable architecture to host a sing
 
 - [Deployment](#deployment)
 
+- [Next Steps & Testing](#NextSteps&Testing)
+
+- [Contact](#contact)
+
 ## Introduction
 This project will provide you with the resources to build and deploy your own single page web application. The architecture is portrayed in the diagram shown in the following section (nb. VPN Gateway Branch + Fleet/IoT GW is not implemented due to practical reasons). 
 
@@ -42,7 +46,7 @@ Let us cover the key components that will be installed, and the role they play i
 ## Prerequisites
 
 Please ensure the following prerequisites are met prior to deploying this application:
-- [x] Basic AWS Console knowledge
+- [x] Basic knowledge of the AWS Console, CLI and Git. 
 - [x] Permissions to deploy CloudFormation templates within your AWS account. 
 - [x] Valid domain names along with certificates. Replace Cognito callback URL + CloudFormation URL with appropriate DNS names. Replace certificate values with appropriate certificates. [Amazon Route53](https://aws.amazon.com/route53/) can be used for DNS related tasks. [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) can be used for provisioning and managing certificates. 
 
@@ -65,9 +69,15 @@ Please ensure the following prerequisites are met prior to deploying this applic
 
 ## Next Steps & Testing
 The functionality of this architecture can be tested in various ways. The following list contains a few suggested methods: 
-- Connect your repository to AWS CodeCommit by following the instructions [here](https://docs.aws.amazon.com/codecommit/latest/userguide/how-to-connect.html). Once a commit has been made and pushed, you can observe the pipeline progress using AWS CodePipeline.  
 
+- Test the Firehose delivery stream by sending demo data to the S3 bucket. Instructions can be found [here](https://docs.aws.amazon.com/firehose/latest/dev/test-drive-firehose.html). 
+- Terminate an EC2 instance to observe how the ASG reacts. 
+- Use Athena to query the VPC flowlogs found in S3. Instructions and tips can be found [here](https://docs.aws.amazon.com/athena/latest/ug/vpc-flow-logs.html). 
+- Connect to individual EC2 instances using Systems Manager Session Manager. Experiment with EFS and Aurora DB. 
+- Connect your repository to AWS CodeCommit by following the instructions [here](https://docs.aws.amazon.com/codecommit/latest/userguide/how-to-connect.html). Once a commit has been made and pushed, you can observe the pipeline progress using AWS CodePipeline. A sample web page has been provided in this repository. It is designed with two files, one which requires authentication via Cognito. 
+- When accessing the website created via the CodePipeline, click the link to the Secret Page. Authenticate via Cognito to access this page. 
 
+## Contact
 
 
 
