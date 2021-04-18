@@ -12,7 +12,7 @@ This project creates a highly available and scalable architecture to host a sing
 
 - [Deployment](#deployment)
 
-- [Next Steps & Testing](#NextSteps&Testing)
+- [Next Steps & Testing](#NextStepsTesting)
 
 - [Contact](#contact)
 
