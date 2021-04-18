@@ -6,7 +6,7 @@ This project creates a highly available and scalable architecture to host a sing
 
 - [Introduction](#introduction)
 
-- [Architecture Diagram](#architecturediagaram)
+- [Architecture](#architecture)
 
 - [Prerequisites](#prerequisites)
 
@@ -39,7 +39,7 @@ Let us cover the key components that will be installed, and the role they play i
 - [x] [Amazon Athena](https://aws.amazon.com/athena/?whats-new-cards.sort-by=item.additionalFields.postDateTime&whats-new-cards.sort-order=desc) is an interactive query service that analyze data in S3 using standard SQL. 
 - [x] [AWS CodePipeline](https://aws.amazon.com/codepipeline/), a fully managed continuous delivery service that enables automatic release pipelines for fast and reliable application updates. Stores code in [AWS CodeCommit](https://aws.amazon.com/codecommit/), a fully managed source code control service that hosts secure git-based repositories. CodePipeline will then use [AWS CodeDeploy](https://aws.amazon.com/codedeploy/) to deploy the service into the ASG.   
 
-## Architecture Diagram
+## Architecture
 
 ![AB Proposal-2(1)-Copy of Copy of Page-2](https://user-images.githubusercontent.com/32502465/114927451-78923080-9dff-11eb-9de3-07ede5d99611.jpg)
 
