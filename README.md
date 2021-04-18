@@ -52,20 +52,28 @@ Please ensure the following prerequisites are met prior to deploying this applic
 
 ## Deployment
 
-1. Navigate to the CloudFormations page within your AWS Console. 
-2. Click _Create stack_. 
-3. Select _Template is ready_ and _Upload a template file_. Choose the AB.yml file. Hit next when complete. 
+1. Navigate to the CloudFormations page within your AWS Console. ![Screen Shot 2021-04-16 at 3 37 25 PM](https://user-images.githubusercontent.com/32502465/115130541-8c37c580-9fbe-11eb-83f0-eebc0f6e60ec.png)
+
+2. Click _Create stack_. ![Screen Shot 2021-04-16 at 3 37 44 PM](https://user-images.githubusercontent.com/32502465/115130547-98238780-9fbe-11eb-994c-ceea5785cfc5.png)
+
+3. Select _Template is ready_ and _Upload a template file_. Choose the AB.yml file. Hit next when complete. ![Screen Shot 2021-04-16 at 3 38 32 PM](https://user-images.githubusercontent.com/32502465/115130560-aec9de80-9fbe-11eb-95f0-49a392b7c5d2.png)
+
 4. Enter a _Stack name_. Edit the parameters as needed. Once complete, click _Next_. Please note the following:
     - Ensure AMI ID is valid in your region of choice. 
     - Default PW for Aurora is "password". 
     - Bucket names must be globally unqiue. 
     - Replace the certificates with ones which are unique to your use case. 
-    - Replace the CloudFront domain name with one which is unique to your use case. 
-5. Leave all options as default, scroll down and click _Next_. 
-6. Review your Stack. Select the checkbox acknowledging the creation of IAM resources with custom names. Click _Create Stack_.
+    - Replace the CloudFront domain name with one which is unique to your use case. ![Screen Shot 2021-04-16 at 3 45 34 PM](https://user-images.githubusercontent.com/32502465/115130565-b5585600-9fbe-11eb-9091-2889b3ee2a3e.png)
+
+5. Leave all options as default, scroll down and click _Next_. ![Screen Shot 2021-04-16 at 3 46 08 PM](https://user-images.githubusercontent.com/32502465/115130573-be492780-9fbe-11eb-852d-5b8db13be0a1.png)
+
+6. Review your Stack. Select the checkbox acknowledging the creation of IAM resources with custom names. Click _Create Stack_. ![Screen Shot 2021-04-16 at 3 47 32 PM](https://user-images.githubusercontent.com/32502465/115130577-c3a67200-9fbe-11eb-850a-de452bc8bdbe.png)
+
 7. Complete stack creation will take approximately: 30 minutes. You may view the progress of individual events in the Events tab. You can view the progress of resource creation in the Resources tab. 
-8. The _Status_ of the stack will go from 'CREATE_IN_PROGRESS' to 'CREATE_COMPLETE' when successfully completed. 
-9. Congratulations! You are now complete. 
+8. The _Status_ of the stack will go from 'CREATE_IN_PROGRESS' to 'CREATE_COMPLETE' when successfully completed. ![Screen Shot 2021-04-16 at 3 49 08 PM](https://user-images.githubusercontent.com/32502465/115130587-d91b9c00-9fbe-11eb-8192-cfb2047dde11.png)
+
+9. Congratulations! You are now complete. ![Screen Shot 2021-04-16 at 4 26 12 PM](https://user-images.githubusercontent.com/32502465/115130589-dd47b980-9fbe-11eb-8a01-d820efccabd2.png)
+
 
 ## Next Steps & Testing
 The functionality of this architecture can be tested in various ways. The following list contains a few suggested methods: 
