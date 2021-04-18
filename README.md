@@ -12,7 +12,7 @@ This project creates a highly available and scalable architecture to host a sing
 
 - [Deployment](#deployment)
 
-- [Next Steps & Testing](#nextsteps&testing)
+- [Testing](#testing)
 
 - [Contact](#contact)
 
@@ -75,7 +75,7 @@ Please ensure the following prerequisites are met prior to deploying this applic
 9. Congratulations! You are now complete. ![Screen Shot 2021-04-16 at 4 26 12 PM](https://user-images.githubusercontent.com/32502465/115130589-dd47b980-9fbe-11eb-8a01-d820efccabd2.png)
 
 
-## Next Steps & Testing
+## Testing
 The functionality of this architecture can be tested in various ways. The following list contains a few suggested methods: 
 
 - Test the Firehose delivery stream by sending demo data to the S3 bucket. Instructions can be found [here](https://docs.aws.amazon.com/firehose/latest/dev/test-drive-firehose.html). 
