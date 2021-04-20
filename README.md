@@ -49,7 +49,7 @@ Please ensure the following prerequisites are met prior to deploying this applic
 - [x] Basic knowledge of the AWS Console, CLI and Git. 
 - [x] Permissions to deploy CloudFormation templates within your AWS account. 
 - [x] Valid domain names along with certificates. Replace Cognito callback URL + CloudFormation URL with appropriate DNS names. Replace certificate values with appropriate certificates. [Amazon Route53](https://aws.amazon.com/route53/) can be used for DNS related tasks. [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) can be used for provisioning and managing certificates. 
-- [x] The CFn template needs to be launched in us-east-1 for CLOUDFRONT to work with WAF. If you are running the CFn template in another region, you can set up WAF by following [these instructions](https://docs.aws.amazon.com/waf/latest/developerguide/getting-started.html). 
+- [x] The CFn template needs to be launched in us-east-1 for CloudFront to work with WAF. If you are running the CFn template in another region, you can set up WAF by following [these instructions](https://docs.aws.amazon.com/waf/latest/developerguide/getting-started.html). 
 
 ## Deployment
 
