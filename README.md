@@ -84,7 +84,6 @@ The functionality of this architecture can be tested in various ways. The follow
 - Use Athena to query the VPC flowlogs found in S3. Instructions and tips can be found [here](https://docs.aws.amazon.com/athena/latest/ug/vpc-flow-logs.html). 
 - Connect to individual EC2 instances using Systems Manager Session Manager. Experiment with EFS and Aurora DB. 
 - Connect your repository to AWS CodeCommit by following the instructions [here](https://docs.aws.amazon.com/codecommit/latest/userguide/how-to-connect.html). Once a commit has been made and pushed, you can observe the pipeline progress using AWS CodePipeline. A sample web page has been provided in this repository. It is designed with two files, one which requires authentication via Cognito. 
-- When accessing the website created via the CodePipeline, click the link to the Secret Page. Authenticate via Cognito to access this page. 
 
 ## Contact
 
